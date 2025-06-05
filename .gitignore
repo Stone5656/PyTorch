@@ -1,0 +1,178 @@
+################################################################################
+#                   Python .gitignore
+#
+# このファイルはGitHubのテンプレートをベースに、一般的なPythonプロジェクトで
+# Gitの管理対象外にすべきファイルやディレクトリを定義しています。
+# 不要な部分は削除し、プロジェクトに合わせてカスタマイズしてください。
+################################################################################
+
+
+### Python全般 ###
+
+# バイトコードファイル（コンパイルされたPythonファイル）
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C拡張モジュール
+*.so
+
+# 配布/パッケージング関連
+# wheelやeggなどのビルド成果物はリポジトリに含めない
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+# PyInstallerで実行ファイルを作成する際の中間ファイル
+*.manifest
+*.spec
+
+
+### 環境関連 ###
+
+# 仮想環境
+# venv, virtualenv, pyenv, poetry, pdmなどで作成される環境フォルダ
+# プロジェクトごとに環境は異なるため、リポジトリに含めないのが一般的
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.python-version
+
+# Poetry
+# poetry.lockは依存関係を固定するためにコミットすることが推奨される場合が多いですが、
+# 環境差異で問題が起きる場合はコメントアウトを外してください。
+# poetry.lock
+
+# PDM
+__pypackages__/
+
+
+### ライブラリとフレームワーク ###
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask
+instance/
+.webassets-cache
+
+# Scrapy
+.scrapy
+
+# Sphinx (ドキュメンテーション)
+docs/_build/
+
+
+### 開発ツール ###
+
+# Jupyter Notebook / iPython
+# チェックポイントファイルは実行時に自動生成されるため不要
+.ipynb_checkpoints
+profile_default/
+ipython_config.py
+
+# テストとカバレッジ
+# テスト実行時に生成されるレポートやキャッシュ
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+.ruff_cache/
+
+# 型チェック (mypy, pyre, pytype)
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+
+# Lint (pylint)
+pylint.d/
+
+
+### エディタとIDEの設定 ###
+
+# Visual Studio Code
+# ワークスペースごとの設定やデバッグ構成は共有しないことが多い
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/
+
+# PyCharm
+# プロジェクト固有の設定ファイルやキャッシュ
+.idea/
+*.iws
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Atom
+.atom/
+
+# Spyder
+.spyderproject/
+.spyproject/
+
+
+### OS固有のファイル ###
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+
+### その他 ###
+
+# dotenv: 環境変数を記述するファイル（APIキーなど機密情報を含むため絶対にコミットしない）
+.env
+.env.*
+!.env.example
+
+# その他の一時ファイルやログファイル
+*.log
+*.swp
+*~
