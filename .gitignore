@@ -176,3 +176,4 @@ Desktop.ini
 *.log
 *.swp
 *~
+.ssh/
