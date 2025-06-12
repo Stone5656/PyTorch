@@ -1,9 +1,11 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from sklearn.datasets import fetch_california_housing
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from pathlib import Path
 
+from california_housing_pre_dataset import setup_linear_regression_data
 from pytorch_predata_cache import cache_preprocessed_data_torch
 from utils.path.dir_items_count import count_matching_dirs
 from utils.path.root_abspath_setting import ROOT_DIR
@@ -22,14 +24,22 @@ OUTPUT_PATH_WEIGHT = OUTPUT_PATH / f'weight{weight_dir_count+1}'
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
-mldata, scaler = cache_preprocessed_data_torch(OUTPUT_PATH_WEIGHT)
+housing = fetch_california_housing()
+X, y = housing.data, housing.target
+feature_names = housing.feature_names
+
+mldata, scaler = cache_preprocessed_data_torch(
+    setup_linear_regression_data,
+    OUTPUT_PATH_WEIGHT,
+    X=X, y=y, feature_names=feature_names
+)
 
 X_train = mldata.X_train.to(device)
 y_train = mldata.y_train.to(device)
 X_test = mldata.X_test.to(device)
 y_test = mldata.y_test.to(device)
 
-model = nn.Linear(8, 1).to(device)
+model = nn.Linear(len(feature_names), 1).to(device)
 criterion = nn.MSELoss()
 optimizer = optim.SGD(model.parameters(), lr=0.01)
 
@@ -60,7 +70,6 @@ print(f"R²(決定係数) : {r2:.4f}")
 print("X_train shape:", X_train.shape)  # → torch.Size([?, 8]) であることを確認
 print("モデル構造:", model)
 
-feature_names = ["MedInc", "HouseAge", "AveRooms", "AveBedrms", "Population", "AveOccup", "Latitude", "Longitude"]
 weights = model.weight.detach().numpy().flatten()
 
 plot_prediction_vs_actual(X_test, y_test, y_pred_np, feature_names, OUTPUT_PATH_WEIGHT)
