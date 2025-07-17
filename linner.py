@@ -1,38 +1,106 @@
+from pathlib import Path
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from sklearn.datasets import fetch_california_housing
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-from pathlib import Path
 
-from california_housing_pre_dataset import setup_linear_regression_data
-from pytorch_predata_cache import cache_preprocessed_data_torch
 from utils.path.dir_items_count import count_matching_dirs
 from utils.path.root_abspath_setting import ROOT_DIR
 from utils.visualize.plot_barh_weight import plot_weight_feature_importance
 from utils.visualize.plot_ideal_line import plot_ideal_line
 from utils.visualize.plot_img_list import plot_prediction_vs_actual
+from test_maybe import Maybe, PipelineData, SetupData, scale_data, show_original_data, show_processed_data, split_data, to_tensor
+from utils.cache.pytorch_predata_cache import cache_preprocess_data_load, cache_preprocess_data_save
+from utils.path.dir_items_count import count_matching_dirs
+from utils.path.root_abspath_setting import ROOT_DIR
 
 # --- 設定 ---
-# 保存するキャッシュファイルの名前
 root_path = Path(str(ROOT_DIR))
 OUTPUT_PATH = root_path / 'out'
+
+# 学習結果保存ディレクトリ作成
+OUTPUT_PATH.mkdir(parents=True, exist_ok=True)
 
 weight_dir_count = count_matching_dirs(str(OUTPUT_PATH), r"^weight[0-9]+$")
 OUTPUT_PATH_WEIGHT = OUTPUT_PATH / f'weight{weight_dir_count+1}'
 
+# 学習結果保存ディレクトリ作成
+OUTPUT_PATH_WEIGHT.mkdir(parents=True, exist_ok=True)
+
+# 🔽 キャッシュファイルのパスを定義
+CACHE_PATH = OUTPUT_PATH / "cache_preprocessed_data.pt"
+SCALER_PATH = OUTPUT_PATH / "scaler.pkl"
+FEATURE_PATH = OUTPUT_PATH / "feature_names.skl"
+
+cache_data: PipelineData = (
+    Maybe(CACHE_PATH if CACHE_PATH.exists() and SCALER_PATH.exists() and FEATURE_PATH.exists() else None)
+    .to_else(
+        # キャッシュからロード
+        lambda _: cache_preprocess_data_load(
+            input_cache_path=CACHE_PATH,
+            input_scaler_path=SCALER_PATH,
+            input_feature_path=FEATURE_PATH
+        ),
+        else_func=lambda: (
+            Maybe(fetch_california_housing())
+            .bind(lambda housing: SetupData(
+                X=housing.data,
+                y=housing.target,
+                feature_names=housing.feature_names
+            ))
+            .bind(lambda data: (
+                Maybe(data.X)
+                .tap(show_original_data, data.feature_names)
+                .bind(split_data, data.y, 0.3, 42)
+                .bind(lambda split_data: scale_data(split_data, data.feature_names))
+                .expect("PipelineDataの生成に失敗しました")
+            ))
+            .to_else(
+                lambda pipeline_data: (
+                    Maybe(
+                        PipelineData(
+                            data=Maybe(pipeline_data.data)
+                                .bind(to_tensor)
+                                .tap(show_processed_data)
+                                .expect("MLDataが見つかりません"),
+                            feature_names=pipeline_data.feature_names,
+                            scaler=pipeline_data.scaler
+                        )
+                    )
+                    .tap(
+                        lambda pdata: print(
+                            f"[DEBUG] PipelineData:\n"
+                            f"  - type(data): {type(pdata.data)}\n"
+                            f"  - feature_names: {pdata.feature_names}\n"
+                            f"  - type(scaler): {type(pdata.scaler)}"
+                        )
+                    )
+                    .tap(
+                        lambda pdata: cache_preprocess_data_save(
+                            data=pdata,
+                            output_cache_path=CACHE_PATH,
+                            output_scaler_path=SCALER_PATH,
+                            output_feature_path=FEATURE_PATH
+                        )
+                    )
+                    .expect("PipelineData が生成できませんでした")
+                ),
+                else_func=lambda: exit("前処理に失敗しました")
+            )
+        )
+    )
+)
+
+print(f"[DEBUG] type(cache_data): {type(cache_data)}")
+
+mldata = cache_data.data
+scaler = cache_data.scaler
+feature_names = cache_data.feature_names
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
-
-housing = fetch_california_housing()
-X, y = housing.data, housing.target
-feature_names = housing.feature_names
-
-mldata, scaler = cache_preprocessed_data_torch(
-    setup_linear_regression_data,
-    OUTPUT_PATH_WEIGHT,
-    X=X, y=y, feature_names=feature_names
-)
 
 X_train = mldata.X_train.to(device)
 y_train = mldata.y_train.to(device)
