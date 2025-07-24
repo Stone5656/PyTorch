@@ -7,13 +7,11 @@ from sklearn.datasets import fetch_california_housing
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 
 from utils.path.dir_items_count import count_matching_dirs
-from utils.path.root_abspath_setting import ROOT_DIR
 from utils.visualize.plot_barh_weight import plot_weight_feature_importance
 from utils.visualize.plot_ideal_line import plot_ideal_line
 from utils.visualize.plot_img_list import plot_prediction_vs_actual
 from test_maybe import Maybe, PipelineData, SetupData, scale_data, show_original_data, show_processed_data, split_data, to_tensor
 from utils.cache.pytorch_predata_cache import cache_preprocess_data_load, cache_preprocess_data_save
-from utils.path.dir_items_count import count_matching_dirs
 from utils.path.root_abspath_setting import ROOT_DIR
 
 # --- 設定 ---
