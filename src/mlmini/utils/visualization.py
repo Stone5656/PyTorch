@@ -100,3 +100,43 @@ def plot_prediction_grid(
     plt.tight_layout()
     plt.savefig(output_path, dpi=150)
     plt.close()
+
+def plot_confusion_matrix(confusion_matrix, labels, output_path: str):  # type: ignore[no-untyped-def]
+    """混同行列を画像として保存する。
+
+    Args:
+        confusion_matrix: 2次元配列（shape: [num_classes, num_classes]）
+        labels: クラス名のシーケンス（軸ラベルに使用）
+        output_path: 出力ファイルパス（.png など）
+    """
+    import numpy as _np
+    cm = _np.asarray(confusion_matrix)
+
+    plt.figure(figsize=(max(4, len(labels)*0.8), max(3, len(labels)*0.8)))
+    ax = plt.gca()
+    im = ax.imshow(cm, aspect="auto")
+    plt.colorbar(im, ax=ax)
+
+    ax.set_xticks(range(len(labels)))
+    ax.set_yticks(range(len(labels)))
+    ax.set_xticklabels(labels, rotation=45, ha="right")
+    ax.set_yticklabels(labels)
+    ax.set_xlabel("Predicted")
+    ax.set_ylabel("True")
+    ax.set_title("Confusion Matrix")
+
+    # セル内に数値を表示
+    thresh = cm.max()/2 if cm.size else 0
+    for i in range(cm.shape[0]):
+        for j in range(cm.shape[1]):
+            val = cm[i, j]
+            ax.text(
+                j, i, f"{int(val)}",
+                ha="center", va="center",
+                fontsize=8,
+                color="white" if val > thresh else "black",
+            )
+
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=150)
+    plt.close()
