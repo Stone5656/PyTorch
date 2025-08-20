@@ -1,42 +1,83 @@
-了解しました。以下は**コードブロックを外したバージョン**の `README.md` 内容です。マークダウン形式はそのまま維持し、インストール・実行方法や画像の説明も含めて整えています。
-
----
-
 # California Housing Price Prediction - Linear Regression
 
-本プロジェクトでは、カリフォルニア住宅価格データセットを用いた線形回帰分析を行い、住宅価格の予測モデルを構築しています。
-予測モデルの可視化結果と、再実行の手順について解説します。
+本プロジェクトでは、**California Housing** データセットを用いた **線形回帰** により、住宅価格の予測モデルを構築します。
+学習→推論→可視化の結果と、**キャッシュ再利用による再現方法** をまとめています。
 
 ---
 
-## 🔧 実行方法
+## 🔧 セットアップ
 
-以下の手順で環境構築と実行が可能です。
+下記いずれかで依存関係を導入します。
 
-1. 必要なパッケージをインストールします：
-```python
+### 1) `uv` / `pip` でパッケージとして開発インストール（推奨）
+
+```bash
+# uv を使う場合（推奨）
+uv pip install -e .
+
+# もしくは pip
+pip install -e .
+```
+
+### 2) 既存の `requirements.txt` を使う場合（任意）
+
+```bash
 pip install -r requirements.txt
 ```
-2. メインスクリプトを実行します：
-```python
-python liner.py
-```
+
+> **補足**: 本リポジトリは `pyproject.toml` ベースでの開発インストール（`-e`）を想定しています。
+> `requirements.txt` は補助的に利用できます。
+
 ---
 
-## 🧠 キャッシュの仕組みと再利用方法
+## ▶ 実行方法（既存スクリプト）
 
-`liner.py` の以下の設定部分では、出力先ディレクトリとして `out/weightN`（Nは連番）を自動生成しています。
+既存スクリプトでの実行手順です。**ファイル名は `linner.py`** です（`liner.py` ではありません）。
+
+```bash
+python linner.py
 ```
-./liner.py:16
+
+* 実行すると `out/weightN`（N は連番）が自動生成され、学習結果・可視化が保存されます。
+
+> 将来的に、本プロジェクトは `mlmini` という CLI を提供予定です（現在はスケルトン）。
+> インストール後に `mlmini` を実行すると、案内メッセージが表示されます。
+> （回帰/分類のサブコマンドは後続コミットで有効化されます）
+
+```bash
+# 参考（現状はプレースホルダ）
+mlmini
+```
+
+---
+
+## 🧠 キャッシュの仕組みと再利用
+
+`linner.py` では、出力先ディレクトリとして `out/weightN`（N は連番）を自動生成します。
+該当箇所（例）:
+
+```python
 # --- 設定 ---
+root_path = Path(str(ROOT_DIR))
+OUTPUT_PATH = root_path / "out"
 
-root\_path = Path(str(ROOT\_DIR))
-OUTPUT\_PATH = root\_path / 'out'
-
-weight\_dir\_count = count\_matching\_dirs(str(OUTPUT\_PATH), r"^weight\[0-9]+\$")
-OUTPUT\_PATH\_WEIGHT = OUTPUT\_PATH / f'weight{weight\_dir\_count+1}'
+weight_dir_count = count_matching_dirs(str(OUTPUT_PATH), r"^weight[0-9]+$")
+OUTPUT_PATH_WEIGHT = OUTPUT_PATH / f"weight{weight_dir_count + 1}"
 ```
-すでに存在する `out/weightN` ディレクトリからキャッシュ（`cache_preprocessed_data.pt`）とスケーラー（`scaler.pkl`）を別の出力先にコピーすれば、**再計算を行うことなく同じ結果が再現**できます。
+
+すでに存在する `out/weightN` から **キャッシュ（例: `cache_preprocessed_data.pt`）** と
+**スケーラー（`scaler.pkl`）** を **新しい出力先** にコピーすることで、
+**再計算なしで同じ結果を再現** できます。
+
+例:
+
+```bash
+# 既存の weight1 から新規 weight2 へキャッシュとスケーラーをコピー
+cp out/weight1/cache_preprocessed_data.pt out/weight2/
+cp out/weight1/scaler.pkl out/weight2/
+```
+
+> **注**: 出力物の配置は将来的に `model/`, `figures/`, `cache/` のサブディレクトリへ整理予定です（後方互換は維持）。
 
 ---
 
@@ -46,9 +87,9 @@ OUTPUT\_PATH\_WEIGHT = OUTPUT\_PATH / f'weight{weight\_dir\_count+1}'
 
 ![Actual vs Predicted](./docs/sample_images/ideal_line.png)
 
-* **説明**：実際の住宅価格と予測値の散布図です。
-* **赤の破線**：理想的な予測（予測＝実測）のラインを表しています。
-* **解釈**：データが赤線に近いほど、予測精度が高いことを意味します。
+* **内容**: 実測値と予測値の散布図。
+* **赤の破線**: 理想線（予測＝実測）。
+* **読み取り方**: 点が赤線に近いほどモデル精度が高い。
 
 ---
 
@@ -56,9 +97,9 @@ OUTPUT\_PATH\_WEIGHT = OUTPUT\_PATH / f'weight{weight\_dir\_count+1}'
 
 ![Feature Importance](./docs/sample_images/importance_weight.png)
 
-* **説明**：線形回帰モデルで使用された各特徴量の重要度（重み）を示した棒グラフです。
-* **正の重み**：住宅価格と正の相関を持つ要因（例：MedInc）。
-* **負の重み**：住宅価格と負の相関を持つ要因（例：Longitude, Latitude）。
+* **内容**: 特徴量の重要度（回帰係数）の棒グラフ。
+* **正の重み**: 価格と正の相関（例: `MedInc`）。
+* **負の重み**: 価格と負の相関（例: `Longitude`, `Latitude`）。
 
 ---
 
@@ -66,40 +107,50 @@ OUTPUT\_PATH\_WEIGHT = OUTPUT\_PATH / f'weight{weight\_dir\_count+1}'
 
 ![Feature-wise Actual vs Predicted](./docs/sample_images/prediction_grid.png)
 
-* **説明**：各特徴量ごとの実測値と予測値の比較グラフです（青：実測、オレンジ：予測）。
-* **解釈**：
-
-  * MedInc（中央値収入）は住宅価格に強い影響を持っていることが視覚的に分かります。
-  * 他の特徴量についても、どの程度予測に貢献しているかの傾向を確認できます。
+* **内容**: 特徴量ごとの実測 vs 予測の比較。
+* **所見**: `MedInc`（世帯中央値収入）が最も影響力大。
+  他の特徴量の寄与度も全体傾向として把握可能。
 
 ---
 
-## 📂 出力構成
+## 📂 出力構成（現状）
+
 ```
 out/
 ├── weight1/
-│   ├── cache\_preprocessed\_data.pt
+│   ├── cache_preprocessed_data.pt
 │   ├── scaler.pkl
-│   ├── ideal\_line.png
-│   ├── importance\_weight.png
-│   └── prediction\_grid.png
+│   ├── ideal_line.png
+│   ├── importance_weight.png
+│   └── prediction_grid.png
 ```
-新しい学習を行う場合は `weightN` を自動的にインクリメントして保存されます。
+
+> **将来**: `out/weightN/{model, figures, cache}` に整理予定（互換を損なわない形で移行）。
 
 ---
 
-## 📌 注意
+## ⚠ 注意事項
 
-* 重回帰モデルを使用しているため、特徴量は複数使用されています。
-* 特徴量や目的変数を変える場合は、`setup_linear_regression_data()` の引数を適切に変更してください。
+* **重回帰** を採用しているため、複数の特徴量を使用します。
+* 特徴量や目的変数を変える場合は、`setup_linear_regression_data()` の引数を適切に調整してください。
+* 既存の学習/可視化ロジックは維持しつつ、段階的にコード分割・ドキュメント整備を進めています。
 
 ---
 
-## 📘 使用ライブラリ
-
-代表的なライブラリ：
+## 📘 使用ライブラリ（代表）
 
 * scikit-learn
 * matplotlib
 * torch
 * numpy
+
+---
+
+## 🔜 ロードマップ（簡易）
+
+* [x] 既存スクリプトでの学習・可視化
+* [x] パッケージ骨格（`src/mlmini/`）追加（後方互換を維持）
+* [x] `mlmini` CLI のスケルトン追加
+* [ ] 回帰/分類ロジックの段階的移設（関数分割・docstring 完備）
+* [ ] 可視化ユーティリティの共通化
+* [ ] Django 連携（管理コマンド + 推論API）
