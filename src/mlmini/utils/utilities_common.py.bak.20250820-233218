@@ -1,4 +1,4 @@
-"""共通ユーティリティ。
+"""共通ユーティリティ（スケルトン）。
 
 シード固定、処理時間計測などの小さな汎用機能をまとめます。
 """
@@ -11,26 +11,10 @@ from typing import Iterator, Optional
 
 
 def set_global_random_seed(seed: int = 42, enable_cuda: bool = True) -> None:
-    """乱数シードを固定する（numpy/torch が利用可能なら併せて固定）。
-
-    Args:
-        seed: シード値。
-        enable_cuda: True の場合、CUDA が使える環境では CUDA 側のシードも設定する。
-    """
+    """乱数シードを固定する（プレースホルダ）。"""
     random.seed(seed)
-    try:
-        import numpy as _np  # type: ignore
-        _np.random.seed(seed)
-    except Exception:
-        pass
-
-    try:
-        import torch as _torch  # type: ignore
-        _torch.manual_seed(seed)
-        if enable_cuda and _torch.cuda.is_available():
-            _torch.cuda.manual_seed_all(seed)
-    except Exception:
-        pass
+    # numpy や torch のシード設定は後続のコミットで追加予定
+    _ = enable_cuda
 
 
 @contextlib.contextmanager
