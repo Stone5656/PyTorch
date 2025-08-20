@@ -17,4 +17,10 @@ dependencies = [
 ]
 
 [project.scripts]
-mlmini = "src.mlmini.cli:main"
+mlmini = "mlmini.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

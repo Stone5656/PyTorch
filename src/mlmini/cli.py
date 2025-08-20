@@ -17,10 +17,10 @@ from __future__ import annotations
 import argparse
 from typing import Callable
 
-from src.mlmini.regression.train import cli_regression_train
-from src.mlmini.regression.infer import cli_regression_predict
-from src.mlmini.classification.train import cli_classification_train
-from src.mlmini.classification.infer import cli_classification_predict
+from mlmini.regression.train import cli_regression_train
+from mlmini.regression.infer import cli_regression_predict
+from mlmini.classification.train import cli_classification_train
+from mlmini.classification.infer import cli_classification_predict
 
 
 def build_argument_parser() -> argparse.ArgumentParser:

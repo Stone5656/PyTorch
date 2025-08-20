@@ -16,10 +16,10 @@ import numpy as np
 import torch
 from sklearn.linear_model import LinearRegression
 
-from src.mlmini.regression.data import load_regression_dataset
-from src.mlmini.utils.file_io import allocate_next_weight_directory, ensure_output_directory
-from src.mlmini.utils.utilities_common import set_global_random_seed, elapsed_timer
-from src.mlmini.utils.visualization import (
+from mlmini.regression.data import load_regression_dataset
+from mlmini.utils.file_io import allocate_next_weight_directory, ensure_output_directory
+from mlmini.utils.utilities_common import set_global_random_seed, elapsed_timer
+from mlmini.utils.visualization import (
     plot_ideal_line,
     plot_feature_importance,
     plot_prediction_grid,

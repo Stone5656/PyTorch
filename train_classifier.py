@@ -12,7 +12,7 @@
 import os as _os
 try:
     if _os.getenv("MLMINI_REDIRECT") == "1":
-        from src.mlmini.classification.train import train_main as train_main_via_package
+        from mlmini.classification.train import train_main as train_main_via_package
         if __name__ == "__main__":
             train_main_via_package()
             raise SystemExit(0)
