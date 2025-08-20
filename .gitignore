@@ -180,3 +180,20 @@ Desktop.ini
 my_docs/*
 out/*
 dataset/*
+
+# === generated / build / caches ===
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
+
+# === OS junk ===
+.DS_Store
+Thumbs.db
+
+# === training artifacts ===
+out/
