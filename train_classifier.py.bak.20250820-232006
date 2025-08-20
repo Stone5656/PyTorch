@@ -1,26 +1,3 @@
-# -*- coding: utf-8 -*-
-# === MLMINI 非破壊ラッパ（コミット3）開始 ===
-# 目的:
-#   デフォルトの挙動を維持しつつ、必要に応じて新パッケージ側のエントリポイントに委譲する。
-# 使い方:
-#   $ export MLMINI_REDIRECT=1
-#   $ python train_classifier.py
-# 挙動:
-#   - 環境変数が未設定なら、以降の既存コードがそのまま実行される（互換性維持）。
-#   - 環境変数が 1 のときは、src.mlmini の train_main() を呼び出して即終了する。
-
-import os as _os
-try:
-    if _os.getenv("MLMINI_REDIRECT") == "1":
-        from src.mlmini.classification.train import train_main as train_main_via_package
-        if __name__ == "__main__":
-            train_main_via_package()
-            raise SystemExit(0)
-except Exception as _mlmini_wrapper_error:
-    # 新パッケージが未実装/未インストールの場合でも既存挙動を維持するため、例外は握りつぶします。
-    pass
-# === MLMINI 非破壊ラッパ（コミット3）終了 ===
-
 from pathlib import Path
 import torch
 import torch.nn as nn
