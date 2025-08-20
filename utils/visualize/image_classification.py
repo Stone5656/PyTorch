@@ -195,5 +195,9 @@ def visualize_loader_samples(loader, class_names, title="", max_display=16):
     images = torch.cat(images)[:max_display]
     labels = torch.cat(labels)[:max_display]
 
-    save_path = Path("out") / f"{title.lower().replace(' ', '_')}.png"
+    output_dir = Path("out")
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    save_path = output_dir / f"{title.lower().replace(' ', '_')}.png"
     plot_sample_predictions(images, labels, preds=None, class_names=class_names, max_display=max_display, save_path=save_path)

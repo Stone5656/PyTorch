@@ -11,12 +11,12 @@ from utils.visualize.plot_barh_weight import plot_weight_feature_importance
 from utils.visualize.plot_ideal_line import plot_ideal_line
 from utils.visualize.plot_img_list import plot_prediction_vs_actual
 from test_maybe import Maybe, PipelineData, SetupData, scale_data, show_original_data, show_processed_data, split_data, to_tensor
-from utils.cache.pytorch_predata_cache import cache_preprocess_data_load, cache_preprocess_data_save
+from utils.predata.pytorch_predata_cache import cache_preprocess_data_load, cache_preprocess_data_save
 from utils.path.root_abspath_setting import ROOT_DIR
 
 # --- 設定 ---
 root_path = Path(str(ROOT_DIR))
-OUTPUT_PATH = root_path / 'out'
+OUTPUT_PATH = root_path / 'out' / 'linner'
 
 # 学習結果保存ディレクトリ作成
 OUTPUT_PATH.mkdir(parents=True, exist_ok=True)
