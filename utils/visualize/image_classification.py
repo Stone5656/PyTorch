@@ -182,7 +182,7 @@ def plot_learning_curve(
         plt.show()
 
 
-def visualize_loader_samples(loader, class_names, title="", max_display=16):
+def visualize_loader_samples(loader, class_names, title="", max_display=16, output_dir=Path("out")):
     images = []
     labels = []
 
@@ -194,8 +194,6 @@ def visualize_loader_samples(loader, class_names, title="", max_display=16):
 
     images = torch.cat(images)[:max_display]
     labels = torch.cat(labels)[:max_display]
-
-    output_dir = Path("out")
 
     output_dir.mkdir(parents=True, exist_ok=True)
 
