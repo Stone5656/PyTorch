@@ -296,7 +296,13 @@ def plot_input_and_detected_grids(
     normalization_std=None,
     max_samples: int = 32,
 ):
-    """入力グリッドと検出結果グリッドの2枚を保存する。"""
+    """入力画像グリッドと検出結果グリッドを2ファイル保存する。
+
+    変更点:
+        - 検出グリッドで「P: 予測ラベル」を右肩に表示し、
+          誤検出（pred != true）の場合のみ文字色を赤にする（正解時は黒）。
+        - 枠色は従来通り、正=緑 / 誤=赤。
+    """
     import numpy as _np
     import torch as _torch
     import matplotlib.pyplot as plt
@@ -304,6 +310,7 @@ def plot_input_and_detected_grids(
     def _to_numpy(img):
         if isinstance(img, _torch.Tensor):
             arr = img.detach().cpu().float().clone()
+            # denorm
             if normalization_mean is not None and normalization_std is not None and arr.ndim == 3 and arr.shape[0] in (1, 3):
                 for c in range(arr.shape[0]):
                     arr[c] = arr[c] * float(normalization_std[c]) + float(normalization_mean[c])
@@ -340,25 +347,47 @@ def plot_input_and_detected_grids(
     rows = int(_math.ceil(take / cols))
     imgs = [_to_numpy(images[i]) for i in range(take)]
 
-    # 入力
+    # 1) 入力グリッド（注釈なし）
     plt.figure(figsize=(cols * 2.4, rows * 2.4))
     for k in range(take):
         ax = plt.subplot(rows, cols, k + 1)
-        ax.imshow(imgs[k]); ax.axis("off")
-    plt.tight_layout(); plt.savefig(output_path_input, dpi=150); plt.close()
+        ax.imshow(imgs[k])
+        ax.axis("off")
+    plt.tight_layout()
+    plt.savefig(output_path_input, dpi=150)
+    plt.close()
 
-    # 検出結果
+    # 2) 検出グリッド（T:は黒、P:は誤検出時のみ赤。枠色は正=緑/誤=赤）
     plt.figure(figsize=(cols * 2.4, rows * 2.6))
     for k in range(take):
         ax = plt.subplot(rows, cols, k + 1)
-        ax.imshow(imgs[k]); ax.axis("off")
-        ti = int(targets_arr[k]) if k < len(targets_arr) else 0
-        pi = int(preds_arr[k]) if k < len(preds_arr) else 0
-        tname = class_names[ti] if ti < len(class_names) else str(ti)
-        pname = class_names[pi] if pi < len(class_names) else str(pi)
-        ok = (ti == pi)
-        ax.set_title(f"T:{tname} / P:{pname}", fontsize=8)
-        color = "tab:green" if ok else "tab:red"
+        ax.imshow(imgs[k])
+        ax.axis("off")
+
+        true_idx = int(targets_arr[k]) if k < len(targets_arr) else 0
+        pred_idx = int(preds_arr[k]) if k < len(preds_arr) else 0
+        true_name = class_names[true_idx] if true_idx < len(class_names) else str(true_idx)
+        pred_name = class_names[pred_idx] if pred_idx < len(class_names) else str(pred_idx)
+        correct = (true_idx == pred_idx)
+
+        # 枠色（従来通り）
+        frame_color = "tab:green" if correct else "tab:red"
         for spine in ax.spines.values():
-            spine.set_edgecolor(color); spine.set_linewidth(2.0)
-    plt.tight_layout(); plt.savefig(output_path_detected, dpi=150); plt.close()
+            spine.set_edgecolor(frame_color)
+            spine.set_linewidth(2.0)
+
+        # タイトル左に "T:真値"（黒）
+        ax.set_title(f"T:{true_name}", fontsize=8, loc="left", color="black")
+
+        # 右肩に "P:予測"（誤検出のみ赤／正解は黒）
+        pred_color = "tab:red" if not correct else "black"
+        ax.text(
+            0.98, 1.02, f"P:{pred_name}",
+            transform=ax.transAxes,
+            ha="right", va="bottom",
+            fontsize=8, color=pred_color,
+        )
+
+    plt.tight_layout()
+    plt.savefig(output_path_detected, dpi=150)
+    plt.close()
