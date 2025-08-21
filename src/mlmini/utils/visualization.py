@@ -283,3 +283,82 @@ def plot_misclassified_grid(
     plt.tight_layout()
     plt.savefig(output_path, dpi=150)
     plt.close()
+
+
+def plot_input_and_detected_grids(
+    images,
+    targets,
+    predictions,
+    class_names,
+    output_path_input: str,
+    output_path_detected: str,
+    normalization_mean=None,
+    normalization_std=None,
+    max_samples: int = 32,
+):
+    """入力グリッドと検出結果グリッドの2枚を保存する。"""
+    import numpy as _np
+    import torch as _torch
+    import matplotlib.pyplot as plt
+
+    def _to_numpy(img):
+        if isinstance(img, _torch.Tensor):
+            arr = img.detach().cpu().float().clone()
+            if normalization_mean is not None and normalization_std is not None and arr.ndim == 3 and arr.shape[0] in (1, 3):
+                for c in range(arr.shape[0]):
+                    arr[c] = arr[c] * float(normalization_std[c]) + float(normalization_mean[c])
+                arr = arr.clamp(0.0, 1.0)
+            if arr.ndim == 3 and arr.shape[0] in (1, 3):
+                arr = arr.numpy()
+                arr = _np.transpose(arr, (1, 2, 0))
+                return _np.clip(arr, 0.0, 1.0)
+            return _np.zeros((224, 224, 3), dtype=float)
+        try:
+            arr = _np.asarray(img).astype("float32") / 255.0
+            if arr.ndim == 2:
+                arr = _np.stack([arr] * 3, axis=-1)
+            return _np.clip(arr, 0.0, 1.0)
+        except Exception:
+            return _np.zeros((224, 224, 3), dtype=float)
+
+    targets_arr = _np.asarray(targets)
+    preds_arr = _np.asarray(predictions)
+    n = len(images)
+    if n == 0:
+        for path in (output_path_input, output_path_detected):
+            plt.figure(figsize=(5, 3))
+            plt.text(0.5, 0.5, "No samples", ha="center", va="center")
+            plt.axis("off")
+            plt.tight_layout()
+            plt.savefig(path, dpi=150)
+            plt.close()
+        return
+
+    take = int(min(max_samples, n))
+    import math as _math
+    cols = min(8, max(3, int(_math.ceil(take ** 0.5))))
+    rows = int(_math.ceil(take / cols))
+    imgs = [_to_numpy(images[i]) for i in range(take)]
+
+    # 入力
+    plt.figure(figsize=(cols * 2.4, rows * 2.4))
+    for k in range(take):
+        ax = plt.subplot(rows, cols, k + 1)
+        ax.imshow(imgs[k]); ax.axis("off")
+    plt.tight_layout(); plt.savefig(output_path_input, dpi=150); plt.close()
+
+    # 検出結果
+    plt.figure(figsize=(cols * 2.4, rows * 2.6))
+    for k in range(take):
+        ax = plt.subplot(rows, cols, k + 1)
+        ax.imshow(imgs[k]); ax.axis("off")
+        ti = int(targets_arr[k]) if k < len(targets_arr) else 0
+        pi = int(preds_arr[k]) if k < len(preds_arr) else 0
+        tname = class_names[ti] if ti < len(class_names) else str(ti)
+        pname = class_names[pi] if pi < len(class_names) else str(pi)
+        ok = (ti == pi)
+        ax.set_title(f"T:{tname} / P:{pname}", fontsize=8)
+        color = "tab:green" if ok else "tab:red"
+        for spine in ax.spines.values():
+            spine.set_edgecolor(color); spine.set_linewidth(2.0)
+    plt.tight_layout(); plt.savefig(output_path_detected, dpi=150); plt.close()
