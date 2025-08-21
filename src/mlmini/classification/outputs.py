@@ -257,7 +257,7 @@ def save_all_evaluation_artifacts(
     # 入力グリッド（訓練バッチの先頭）
     try:
         train_first_batch = next(iter(loaders.train_loader))
-        train_images_batch, train_targets_batch  = train_first_batch[0]
+        train_images_batch, train_targets_batch  = train_first_batch
         plot_inputs_grid(
             images=train_images_batch,
             labels=train_targets_batch,
