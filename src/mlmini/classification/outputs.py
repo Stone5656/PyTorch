@@ -32,8 +32,19 @@ def plot_inputs_grid(
     normalization_mean=None,
     normalization_std=None,
     max_samples: int = 32,
+    labels=None,          # 追加: ラベル配列（int or str のリスト/配列）
+    class_names=None,     # 追加: クラス名リスト（labels が int のときに使用）
 ):
-    """入力画像だけを並べたグリッドを保存する（注釈なし）。"""
+    """入力画像だけを並べたグリッドを保存する（注釈なし or ラベル名のみ）。
+
+    Args:
+        images: 画像テンソル (N,C,H,W) / PIL / numpy の配列
+        output_path: 出力PNGパス
+        normalization_mean, normalization_std: デノーマライズ用
+        max_samples: 最大表示枚数
+        labels: 画像ごとのラベル（int/str）。None の場合はラベルを描画しない
+        class_names: クラス名リスト（labels が int の場合にクラス名へ解決）
+    """
     import numpy as _np
     import torch as _torch
     import matplotlib.pyplot as plt
@@ -74,11 +85,30 @@ def plot_inputs_grid(
     rows = int(_math.ceil(take / cols))
     imgs = [_to_numpy(images[i]) for i in range(take)]
 
-    plt.figure(figsize=(cols * 2.4, rows * 2.4))
+    # ラベルを文字列に解決する小ヘルパ
+    def _label_text(i):
+        if labels is None:
+            return None
+        lab = labels[i]
+        # int ラベルを class_names で解決
+        try:
+            if isinstance(lab, (int, _np.integer)) and class_names is not None:
+                if 0 <= int(lab) < len(class_names):
+                    return str(class_names[int(lab)])
+                return str(int(lab))
+            return str(lab)
+        except Exception:
+            return None
+
+    plt.figure(figsize=(cols * 2.4, rows * 2.6))
     for k in range(take):
         ax = plt.subplot(rows, cols, k + 1)
         ax.imshow(imgs[k])
         ax.axis("off")
+        text = _label_text(k)
+        if text is not None:
+            # 画像の下にクラス名だけ表示（小さめ）
+            ax.set_title(text, fontsize=8, color="black")
     plt.tight_layout()
     plt.savefig(output_path, dpi=150)
     plt.close()
@@ -227,13 +257,15 @@ def save_all_evaluation_artifacts(
     # 入力グリッド（訓練バッチの先頭）
     try:
         train_first_batch = next(iter(loaders.train_loader))
-        train_images_batch = train_first_batch[0]
+        train_images_batch, train_targets_batch  = train_first_batch[0]
         plot_inputs_grid(
             images=train_images_batch,
+            labels=train_targets_batch,
+            class_names=loaders.class_names, 
             output_path=os.path.join(output_weight_directory, "validation_inputs_grid.png"),
             normalization_mean=NORMALIZATION_MEAN,
             normalization_std=NORMALIZATION_STD,
-            max_samples=32,
+            max_samples=64,
         )
     except StopIteration:
         pass
